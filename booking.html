@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking - BAAN PAI MAI</title>
+    <script src="https://cdn.tailwindcss.com"></script> 
+</head>
+<body class="bg-[oklch(95.4%_0.038_75.164)] text-stone-800 font-sans min-h-screen">
+
+    <nav class="w-full bg-white/80 backdrop-blur-md border-b border-stone-200">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <a href="index.html" class="text-2xl font-black tracking-tighter text-[oklch(47.6%_0.114_61.907)]">BAAN PAI MAI</a>
+            <a href="index.html" class="text-stone-500 hover:text-stone-800 font-medium">← กลับหน้าหลัก</a>
+        </div>
+    </nav>
+
+    <section class="py-12 px-6">
+        <div class="max-w-3xl mx-auto bg-white rounded-[3rem] p-8 md:p-12 shadow-xl ring-1 ring-stone-100">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-stone-900 mb-2">จองรอบนั่งรถจี๊ป</h2>
+                <p class="text-stone-400 font-light italic">BAAN PAI MAI x Jeep Experience</p>
+            </div>
+            
+            <form id="bookingForm" class="space-y-8">
+                <div>
+                    <label class="block font-semibold mb-3 text-stone-600">1. เลือกวันที่จอง</label>
+                    <input type="date" id="bookingDate" required class="w-full p-4 rounded-2xl bg-stone-50 border-none ring-1 ring-stone-200 focus:ring-2 focus:ring-[oklch(47.6%_0.114_61.907)] outline-none transition-all">
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-3 text-stone-600">2. เลือกรอบเวลา</label>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="timeGrid">
+                        <button type="button" class="time-btn py-4 rounded-2xl border border-stone-200 hover:border-[oklch(47.6%_0.114_61.907)] transition-all font-medium">10:00 น.</button>
+                        <button type="button" class="time-btn py-4 rounded-2xl border border-stone-200 hover:border-[oklch(47.6%_0.114_61.907)] transition-all font-medium">13:00 น.</button>
+                        <button type="button" class="time-btn py-4 rounded-2xl border border-stone-200 hover:border-[oklch(47.6%_0.114_61.907)] transition-all font-medium">15:00 น.</button>
+                        <button type="button" class="time-btn py-4 rounded-2xl border border-stone-200 hover:border-[oklch(47.6%_0.114_61.907)] transition-all font-medium">18:00 น.</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-3 text-stone-600">3. ข้อมูลติดต่อ</label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" id="customerName" placeholder="ชื่อ - นามสกุล" required class="p-4 rounded-2xl bg-stone-50 ring-1 ring-stone-200 focus:ring-2 focus:ring-[oklch(47.6%_0.114_61.907)] outline-none">
+                        <input type="tel" id="telephone" placeholder="เบอร์โทรศัพท์" required class="p-4 rounded-2xl bg-stone-50 ring-1 ring-stone-200 focus:ring-2 focus:ring-[oklch(47.6%_0.114_61.907)] outline-none">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-[oklch(47.6%_0.114_61.907)] text-white py-5 rounded-2xl font-bold text-xl hover:brightness-110 shadow-lg transition-all active:scale-[0.98]">
+                    ยืนยันการจองรถ
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <script type="module">
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAAaq3mcI9Ui09gDTrSDhhTVd6aB0vqE0",
+            authDomain: "baan-pai-mai-booking.firebaseapp.com",
+            projectId: "baan-pai-mai-booking",
+            storageBucket: "baan-pai-mai-booking.firebasestorage.app",
+            messagingSenderId: "166783440073",
+            appId: "1:166783440073:web:93a333245c2e334b026918",
+            measurementId: "G-TKM51ZGWCB"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let selectedTime = "";
+        const timeButtons = document.querySelectorAll('.time-btn');
+
+        timeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                timeButtons.forEach(b => {
+                    b.classList.remove('bg-[oklch(47.6%_0.114_61.907)]', 'text-white', 'border-transparent');
+                    b.classList.add('border-stone-200');
+                });
+                btn.classList.add('bg-[oklch(47.6%_0.114_61.907)]', 'text-white', 'border-transparent');
+                selectedTime = btn.innerText;
+            });
+        });
+
+        const form = document.getElementById('bookingForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if(!selectedTime) {
+                alert("กรุณาเลือกรอบเวลาที่ต้องการครับ");
+                return;
+            }
+
+            const bookingData = {
+                customerName: document.getElementById('customerName').value,
+                telephone: document.getElementById('telephone').value,
+                bookingDate: document.getElementById('bookingDate').value,
+                bookingTime: selectedTime,
+                status: "pending",
+                createdAt: serverTimestamp()
+            };
+
+            try {
+                const docRef = await addDoc(collection(db, "bookings"), bookingData);
+                alert("จองสำเร็จ! เราได้รับข้อมูลของคุณแล้ว\nรหัสการจอง: " + docRef.id);
+                window.location.href = "index.html"; 
+            } catch (error) {
+                console.error("Error: ", error);
+                alert("เกิดข้อผิดพลาด: " + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
